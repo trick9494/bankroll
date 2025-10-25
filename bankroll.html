@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bankroll Manager - Calcolatore Scommesse</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .odds-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--secondary);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .btn-reset {
+            background: var(--light);
+            color: var(--dark);
+        }
+        
+        .btn-reset:hover {
+            background: #bdc3c7;
+        }
+        
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .strategy-card {
+            border-left: 4px solid;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        
+        .conservative {
+            border-left-color: var(--success);
+        }
+        
+        .balanced {
+            border-left-color: var(--warning);
+        }
+        
+        .aggressive {
+            border-left-color: var(--danger);
+        }
+        
+        .strategy-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .result-label {
+            font-weight: 500;
+        }
+        
+        .result-value {
+            font-weight: 600;
+        }
+        
+        .roi-positive {
+            color: var(--success);
+        }
+        
+        .roi-negative {
+            color: var(--danger);
+        }
+        
+        .combination-section {
+            margin-bottom: 30px;
+        }
+        
+        .combination-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .combination-odds {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+        
+        .profit {
+            color: var(--success);
+            font-weight: bold;
+        }
+        
+        .bet-type-selector {
+            display: flex;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .bet-type {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .bet-type.active {
+            background: var(--light);
+            border-bottom: 3px solid var(--secondary);
+            font-weight: 600;
+        }
+        
+        .bet-type:hover {
+            background: var(--light);
+        }
+        
+        @media (max-width: 768px) {
+            .odds-inputs {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .bet-type-selector {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .odds-inputs {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Bankroll Manager</h1>
+            <p class="subtitle">Calcolatore di puntate e vincite per scommesse sportive</p>
+        </header>
+        
+        <div class="card">
+            <h2 class="card-title">Configurazione Budget e Strategia</h2>
+            
+            <div class="form-group">
+                <label for="budget">Budget Totale (€):</label>
+                <input type="number" id="budget" min="1" step="0.01" placeholder="Inserisci il tuo budget">
+            </div>
+            
+            <div class="form-group">
+                <label>Seleziona Tipo di Scommessa:</label>
+                <div class="bet-type-selector">
+                    <div class="bet-type active" data-type="single">Singola</div>
+                    <div class="bet-type" data-type="double">Doppia</div>
+                    <div class="bet-type" data-type="treble">Tris</div>
+                    <div class="bet-type" data-type="multi">Multipla</div>
+                </div>
+            </div>
+            
+            <div class="form-group" id="single-section">
+                <label for="single-odds">Quota Singola:</label>
+                <input type="number" id="single-odds" min="1.50" step="0.01" placeholder="Es. 1.80">
+            </div>
+            
+            <div class="form-group" id="double-section" style="display: none;">
+                <label>Quote Doppia:</label>
+                <div class="odds-inputs">
+                    <input type="number" class="double-odds" min="1.01" step="0.01" placeholder="Quota 1">
+                    <input type="number" class="double-odds" min="1.01" step="0.01" placeholder="Quota 2">
+                </div>
+            </div>
+            
+            <div class="form-group" id="treble-section" style="display: none;">
+                <label>Quote Tris:</label>
+                <div class="odds-inputs">
+                    <input type="number" class="treble-odds" min="1.01" step="0.01" placeholder="Quota 1">
+                    <input type="number" class="treble-odds" min="1.01" step="0.01" placeholder="Quota 2">
+                    <input type="number" class="treble-odds" min="1.01" step="0.01" placeholder="Quota 3">
+                </div>
+            </div>
+            
+            <div class="form-group" id="multi-section" style="display: none;">
+                <label>Quote Multipla (min. 4):</label>
+                <div class="odds-inputs" id="multi-odds-container">
+                    <input type="number" class="multi-odds" min="1.01" step="0.01" placeholder="Quota 1">
+                    <input type="number" class="multi-odds" min="1.01" step="0.01" placeholder="Quota 2">
+                    <input type="number" class="multi-odds" min="1.01" step="0.01" placeholder="Quota 3">
+                    <input type="number" class="multi-odds" min="1.01" step="0.01" placeholder="Quota 4">
+                </div>
+                <button class="btn" id="add-odds-btn" style="margin-top: 10px;">Aggiungi Altra Quota</button>
+            </div>
+            
+            <button class="btn btn-block" id="calculate-btn">Calcola Puntate e Vincite</button>
+            <button class="btn btn-block btn-reset" id="reset-btn">Reset</button>
+        </div>
+        
+        <div class="results" id="results">
+            <div class="card">
+                <h2 class="card-title">Risultati</h2>
+                
+                <div id="single-results" class="combination-section">
+                    <h3 class="combination-title">Scommessa Singola</h3>
+                    <p class="combination-odds" id="single-combined-odds"></p>
+                    
+                    <div class="strategy-card conservative">
+                        <div class="strategy-title">Profilo Conservativo (5% del budget)</div>
+                        <div class="result-item">
+                            <span class="result-label">Puntata:</span>
+                            <span class="result-value" id="single-conservative-stake"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Lorda:</span>
+                            <span class="result-value" id="single-conservative-gross"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Netta:</span>
+                            <span class="result-value profit" id="single-conservative-net"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ROI:</span>
+                            <span class="result-value roi-positive" id="single-conservative-roi"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card balanced">
+                        <div class="strategy-title">Profilo Bilanciato (20% del budget)</div>
+                        <div class="result-item">
+                            <span class="result-label">Puntata:</span>
+                            <span class="result-value" id="single-balanced-stake"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Lorda:</span>
+                            <span class="result-value" id="single-balanced-gross"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Netta:</span>
+                            <span class="result-value profit" id="single-balanced-net"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ROI:</span>
+                            <span class="result-value roi-positive" id="single-balanced-roi"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card aggressive">
+                        <div class="strategy-title">Profilo Aggressivo (50% del budget)</div>
+                        <div class="result-item">
+                            <span class="result-label">Puntata:</span>
+                            <span class="result-value" id="single-aggressive-stake"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Lorda:</span>
+                            <span class="result-value" id="single-aggressive-gross"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Netta:</span>
+                            <span class="result-value profit" id="single-aggressive-net"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ROI:</span>
+                            <span class="result-value roi-positive" id="single-aggressive-roi"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="double-results" class="combination-section" style="display: none;">
+                    <h3 class="combination-title">Scommessa Doppia</h3>
+                    <p class="combination-odds" id="double-combined-odds"></p>
+                    
+                    <div class="strategy-card conservative">
+                        <div class="strategy-title">Profilo Conservativo (5% del budget)</div>
+                        <div class="result-item">
+                            <span class="result-label">Puntata:</span>
+                            <span class="result-value" id="double-conservative-stake"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Lorda:</span>
+                            <span class="result-value" id="double-conservative-gross"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Netta:</span>
+                            <span class="result-value profit" id="double-conservative-net"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ROI:</span>
+                            <span class="result-value roi-positive" id="double-conservative-roi"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card balanced">
+                        <div class="strategy-title">Profilo Bilanciato (20% del budget)</div>
+                        <div class="result-item">
+                            <span class="result-label">Puntata:</span>
+                            <span class="result-value" id="double-balanced-stake"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Lorda:</span>
+                            <span class="result-value" id="double-balanced-gross"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Netta:</span>
+                            <span class="result-value profit" id="double-balanced-net"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ROI:</span>
+                            <span class="result-value roi-positive" id="double-balanced-roi"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card aggressive">
+                        <div class="strategy-title">Profilo Aggressivo (50% del budget)</div>
+                        <div class="result-item">
+                            <span class="result-label">Puntata:</span>
+                            <span class="result-value" id="double-aggressive-stake"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Lorda:</span>
+                            <span class="result-value" id="double-aggressive-gross"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Netta:</span>
+                            <span class="result-value profit" id="double-aggressive-net"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ROI:</span>
+                            <span class="result-value roi-positive" id="double-aggressive-roi"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="treble-results" class="combination-section" style="display: none;">
+                    <h3 class="combination-title">Scommessa Tris</h3>
+                    <p class="combination-odds" id="treble-combined-odds"></p>
+                    
+                    <div class="strategy-card conservative">
+                        <div class="strategy-title">Profilo Conservativo (5% del budget)</div>
+                        <div class="result-item">
+                            <span class="result-label">Puntata:</span>
+                            <span class="result-value" id="treble-conservative-stake"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Lorda:</span>
+                            <span class="result-value" id="treble-conservative-gross"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Netta:</span>
+                            <span class="result-value profit" id="treble-conservative-net"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ROI:</span>
+                            <span class="result-value roi-positive" id="treble-conservative-roi"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card balanced">
+                        <div class="strategy-title">Profilo Bilanciato (20% del budget)</div>
+                        <div class="result-item">
+                            <span class="result-label">Puntata:</span>
+                            <span class="result-value" id="treble-balanced-stake"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Lorda:</span>
+                            <span class="result-value" id="treble-balanced-gross"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Netta:</span>
+                            <span class="result-value profit" id="treble-balanced-net"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ROI:</span>
+                            <span class="result-value roi-positive" id="treble-balanced-roi"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card aggressive">
+                        <div class="strategy-title">Profilo Aggressivo (50% del budget)</div>
+                        <div class="result-item">
+                            <span class="result-label">Puntata:</span>
+                            <span class="result-value" id="treble-aggressive-stake"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Lorda:</span>
+                            <span class="result-value" id="treble-aggressive-gross"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Netta:</span>
+                            <span class="result-value profit" id="treble-aggressive-net"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ROI:</span>
+                            <span class="result-value roi-positive" id="treble-aggressive-roi"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="multi-results" class="combination-section" style="display: none;">
+                    <h3 class="combination-title">Scommessa Multipla</h3>
+                    <p class="combination-odds" id="multi-combined-odds"></p>
+                    
+                    <div class="strategy-card conservative">
+                        <div class="strategy-title">Profilo Conservativo (5% del budget)</div>
+                        <div class="result-item">
+                            <span class="result-label">Puntata:</span>
+                            <span class="result-value" id="multi-conservative-stake"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Lorda:</span>
+                            <span class="result-value" id="multi-conservative-gross"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Netta:</span>
+                            <span class="result-value profit" id="multi-conservative-net"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ROI:</span>
+                            <span class="result-value roi-positive" id="multi-conservative-roi"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card balanced">
+                        <div class="strategy-title">Profilo Bilanciato (20% del budget)</div>
+                        <div class="result-item">
+                            <span class="result-label">Puntata:</span>
+                            <span class="result-value" id="multi-balanced-stake"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Lorda:</span>
+                            <span class="result-value" id="multi-balanced-gross"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Netta:</span>
+                            <span class="result-value profit" id="multi-balanced-net"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ROI:</span>
+                            <span class="result-value roi-positive" id="multi-balanced-roi"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card aggressive">
+                        <div class="strategy-title">Profilo Aggressivo (50% del budget)</div>
+                        <div class="result-item">
+                            <span class="result-label">Puntata:</span>
+                            <span class="result-value" id="multi-aggressive-stake"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Lorda:</span>
+                            <span class="result-value" id="multi-aggressive-gross"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Vincita Netta:</span>
+                            <span class="result-value profit" id="multi-aggressive-net"></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ROI:</span>
+                            <span class="result-value roi-positive" id="multi-aggressive-roi"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementi DOM
+            const budgetInput = document.getElementById('budget');
+            const betTypes = document.querySelectorAll('.bet-type');
+            const singleSection = document.getElementById('single-section');
+            const doubleSection = document.getElementById('double-section');
+            const trebleSection = document.getElementById('treble-section');
+            const multiSection = document.getElementById('multi-section');
+            const singleOddsInput = document.getElementById('single-odds');
+            const multiOddsContainer = document.getElementById('multi-odds-container');
+            const addOddsBtn = document.getElementById('add-odds-btn');
+            const calculateBtn = document.getElementById('calculate-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const resultsSection = document.getElementById('results');
+            
+            // Risultati per singola
+            const singleCombinedOdds = document.getElementById('single-combined-odds');
+            const singleConservativeStake = document.getElementById('single-conservative-stake');
+            const singleConservativeGross = document.getElementById('single-conservative-gross');
+            const singleConservativeNet = document.getElementById('single-conservative-net');
+            const singleConservativeRoi = document.getElementById('single-conservative-roi');
+            const singleBalancedStake = document.getElementById('single-balanced-stake');
+            const singleBalancedGross = document.getElementById('single-balanced-gross');
+            const singleBalancedNet = document.getElementById('single-balanced-net');
+            const singleBalancedRoi = document.getElementById('single-balanced-roi');
+            const singleAggressiveStake = document.getElementById('single-aggressive-stake');
+            const singleAggressiveGross = document.getElementById('single-aggressive-gross');
+            const singleAggressiveNet = document.getElementById('single-aggressive-net');
+            const singleAggressiveRoi = document.getElementById('single-aggressive-roi');
+            
+            // Risultati per doppia
+            const doubleCombinedOdds = document.getElementById('double-combined-odds');
+            const doubleConservativeStake = document.getElementById('double-conservative-stake');
+            const doubleConservativeGross = document.getElementById('double-conservative-gross');
+            const doubleConservativeNet = document.getElementById('double-conservative-net');
+            const doubleConservativeRoi = document.getElementById('double-conservative-roi');
+            const doubleBalancedStake = document.getElementById('double-balanced-stake');
+            const doubleBalancedGross = document.getElementById('double-balanced-gross');
+            const doubleBalancedNet = document.getElementById('double-balanced-net');
+            const doubleBalancedRoi = document.getElementById('double-balanced-roi');
+            const doubleAggressiveStake = document.getElementById('double-aggressive-stake');
+            const doubleAggressiveGross = document.getElementById('double-aggressive-gross');
+            const doubleAggressiveNet = document.getElementById('double-aggressive-net');
+            const doubleAggressiveRoi = document.getElementById('double-aggressive-roi');
+            
+            // Risultati per tris
+            const trebleCombinedOdds = document.getElementById('treble-combined-odds');
+            const trebleConservativeStake = document.getElementById('treble-conservative-stake');
+            const trebleConservativeGross = document.getElementById('treble-conservative-gross');
+            const trebleConservativeNet = document.getElementById('treble-conservative-net');
+            const trebleConservativeRoi = document.getElementById('treble-conservative-roi');
+            const trebleBalancedStake = document.getElementById('treble-balanced-stake');
+            const trebleBalancedGross = document.getElementById('treble-balanced-gross');
+            const trebleBalancedNet = document.getElementById('treble-balanced-net');
+            const trebleBalancedRoi = document.getElementById('treble-balanced-roi');
+            const trebleAggressiveStake = document.getElementById('treble-aggressive-stake');
+            const trebleAggressiveGross = document.getElementById('treble-aggressive-gross');
+            const trebleAggressiveNet = document.getElementById('treble-aggressive-net');
+            const trebleAggressiveRoi = document.getElementById('treble-aggressive-roi');
+            
+            // Risultati per multipla
+            const multiCombinedOdds = document.getElementById('multi-combined-odds');
+            const multiConservativeStake = document.getElementById('multi-conservative-stake');
+            const multiConservativeGross = document.getElementById('multi-conservative-gross');
+            const multiConservativeNet = document.getElementById('multi-conservative-net');
+            const multiConservativeRoi = document.getElementById('multi-conservative-roi');
+            const multiBalancedStake = document.getElementById('multi-balanced-stake');
+            const multiBalancedGross = document.getElementById('multi-balanced-gross');
+            const multiBalancedNet = document.getElementById('multi-balanced-net');
+            const multiBalancedRoi = document.getElementById('multi-balanced-roi');
+            const multiAggressiveStake = document.getElementById('multi-aggressive-stake');
+            const multiAggressiveGross = document.getElementById('multi-aggressive-gross');
+            const multiAggressiveNet = document.getElementById('multi-aggressive-net');
+            const multiAggressiveRoi = document.getElementById('multi-aggressive-roi');
+            
+            // Sezioni risultati
+            const singleResults = document.getElementById('single-results');
+            const doubleResults = document.getElementById('double-results');
+            const trebleResults = document.getElementById('treble-results');
+            const multiResults = document.getElementById('multi-results');
+            
+            // Strategie di puntata (% del budget)
+            const strategies = {
+                conservative: 0.05,  // 5%
+                balanced: 0.20,      // 20%
+                aggressive: 0.50     // 50%
+            };
+            
+            // Gestione selezione tipo di scommessa
+            betTypes.forEach(type => {
+                type.addEventListener('click', function() {
+                    // Rimuovi classe active da tutti
+                    betTypes.forEach(t => t.classList.remove('active'));
+                    // Aggiungi classe active a quello cliccato
+                    this.classList.add('active');
+                    
+                    // Nascondi tutte le sezioni
+                    singleSection.style.display = 'none';
+                    doubleSection.style.display = 'none';
+                    trebleSection.style.display = 'none';
+                    multiSection.style.display = 'none';
+                    
+                    // Mostra solo la sezione selezionata
+                    const betType = this.getAttribute('data-type');
+                    switch(betType) {
+                        case 'single':
+                            singleSection.style.display = 'block';
+                            break;
+                        case 'double':
+                            doubleSection.style.display = 'block';
+                            break;
+                        case 'treble':
+                            trebleSection.style.display = 'block';
+                            break;
+                        case 'multi':
+                            multiSection.style.display = 'block';
+                            break;
+                    }
+                });
+            });
+            
+            // Aggiungi campo quota per multipla
+            addOddsBtn.addEventListener('click', function() {
+                const newInput = document.createElement('input');
+                newInput.type = 'number';
+                newInput.className = 'multi-odds';
+                newInput.min = '1.01';
+                newInput.step = '0.01';
+                newInput.placeholder = 'Quota ' + (multiOddsContainer.children.length + 1);
+                multiOddsContainer.appendChild(newInput);
+            });
+            
+            // Calcola risultati
+            calculateBtn.addEventListener('click', function() {
+                const budget = parseFloat(budgetInput.value);
+                
+                if (!budget || budget <= 0) {
+                    alert('Inserisci un budget valido');
+                    return;
+                }
+                
+                // Determina il tipo di scommessa selezionato
+                let selectedType = '';
+                betTypes.forEach(type => {
+                    if (type.classList.contains('active')) {
+                        selectedType = type.getAttribute('data-type');
+                    }
+                });
+                
+                // Nascondi tutti i risultati
+                singleResults.style.display = 'none';
+                doubleResults.style.display = 'none';
+                trebleResults.style.display = 'none';
+                multiResults.style.display = 'none';
+                
+                // Calcola in base al tipo selezionato
+                switch(selectedType) {
+                    case 'single':
+                        calculateSingle(budget);
+                        singleResults.style.display = 'block';
+                        break;
+                    case 'double':
+                        calculateDouble(budget);
+                        doubleResults.style.display = 'block';
+                        break;
+                    case 'treble':
+                        calculateTreble(budget);
+                        trebleResults.style.display = 'block';
+                        break;
+                    case 'multi':
+                        calculateMulti(budget);
+                        multiResults.style.display = 'block';
+                        break;
+                }
+                
+                // Mostra la sezione risultati
+                resultsSection.style.display = 'block';
+            });
+            
+            // Reset
+            resetBtn.addEventListener('click', function() {
+                budgetInput.value = '';
+                singleOddsInput.value = '';
+                
+                // Reset doppia
+                document.querySelectorAll('.double-odds').forEach(input => {
+                    input.value = '';
+                });
+                
+                // Reset tris
+                document.querySelectorAll('.treble-odds').forEach(input => {
+                    input.value = '';
+                });
+                
+                // Reset multipla
+                document.querySelectorAll('.multi-odds').forEach((input, index) => {
+                    if (index >= 4) {
+                        input.remove();
+                    } else {
+                        input.value = '';
+                    }
+                });
+                
+                // Nascondi risultati
+                resultsSection.style.display = 'none';
+            });
+            
+            // Funzioni di calcolo
+            function calculateSingle(budget) {
+                const odds = parseFloat(singleOddsInput.value);
+                
+                if (!odds || odds < 1.50) {
+                    alert('Inserisci una quota valida (minimo 1.50) per la scommessa singola');
+                    return;
+                }
+                
+                singleCombinedOdds.textContent = `Quota: ${odds.toFixed(2)}`;
+                
+                // Calcola per ogni strategia
+                calculateAndDisplayResults(
+                    odds, 
+                    budget, 
+                    singleConservativeStake, singleConservativeGross, singleConservativeNet, singleConservativeRoi,
+                    singleBalancedStake, singleBalancedGross, singleBalancedNet, singleBalancedRoi,
+                    singleAggressiveStake, singleAggressiveGross, singleAggressiveNet, singleAggressiveRoi
+                );
+            }
+            
+            function calculateDouble(budget) {
+                const oddsInputs = document.querySelectorAll('.double-odds');
+                const odds = [];
+                
+                oddsInputs.forEach(input => {
+                    const odd = parseFloat(input.value);
+                    if (odd && odd >= 1.01) {
+                        odds.push(odd);
+                    }
+                });
+                
+                if (odds.length !== 2) {
+                    alert('Inserisci 2 quote valide per la doppia');
+                    return;
+                }
+                
+                const combinedOdds = odds[0] * odds[1];
+                doubleCombinedOdds.textContent = `Quote: ${odds[0].toFixed(2)} × ${odds[1].toFixed(2)} = ${combinedOdds.toFixed(2)}`;
+                
+                // Calcola per ogni strategia
+                calculateAndDisplayResults(
+                    combinedOdds, 
+                    budget, 
+                    doubleConservativeStake, doubleConservativeGross, doubleConservativeNet, doubleConservativeRoi,
+                    doubleBalancedStake, doubleBalancedGross, doubleBalancedNet, doubleBalancedRoi,
+                    doubleAggressiveStake, doubleAggressiveGross, doubleAggressiveNet, doubleAggressiveRoi
+                );
+            }
+            
+            function calculateTreble(budget) {
+                const oddsInputs = document.querySelectorAll('.treble-odds');
+                const odds = [];
+                
+                oddsInputs.forEach(input => {
+                    const odd = parseFloat(input.value);
+                    if (odd && odd >= 1.01) {
+                        odds.push(odd);
+                    }
+                });
+                
+                if (odds.length !== 3) {
+                    alert('Inserisci 3 quote valide per il tris');
+                    return;
+                }
+                
+                const combinedOdds = odds[0] * odds[1] * odds[2];
+                trebleCombinedOdds.textContent = `Quote: ${odds[0].toFixed(2)} × ${odds[1].toFixed(2)} × ${odds[2].toFixed(2)} = ${combinedOdds.toFixed(2)}`;
+                
+                // Calcola per ogni strategia
+                calculateAndDisplayResults(
+                    combinedOdds, 
+                    budget, 
+                    trebleConservativeStake, trebleConservativeGross, trebleConservativeNet, trebleConservativeRoi,
+                    trebleBalancedStake, trebleBalancedGross, trebleBalancedNet, trebleBalancedRoi,
+                    trebleAggressiveStake, trebleAggressiveGross, trebleAggressiveNet, trebleAggressiveRoi
+                );
+            }
+            
+            function calculateMulti(budget) {
+                const oddsInputs = document.querySelectorAll('.multi-odds');
+                const odds = [];
+                
+                oddsInputs.forEach(input => {
+                    const odd = parseFloat(input.value);
+                    if (odd && odd >= 1.01) {
+                        odds.push(odd);
+                    }
+                });
+                
+                if (odds.length < 4) {
+                    alert('Inserisci almeno 4 quote valide per la multipla');
+                    return;
+                }
+                
+                let combinedOdds = 1;
+                let oddsString = '';
+                
+                odds.forEach((odd, index) => {
+                    combinedOdds *= odd;
+                    oddsString += (index > 0 ? ' × ' : '') + odd.toFixed(2);
+                });
+                
+                multiCombinedOdds.textContent = `Quote: ${oddsString} = ${combinedOdds.toFixed(2)}`;
+                
+                // Calcola per ogni strategia
+                calculateAndDisplayResults(
+                    combinedOdds, 
+                    budget, 
+                    multiConservativeStake, multiConservativeGross, multiConservativeNet, multiConservativeRoi,
+                    multiBalancedStake, multiBalancedGross, multiBalancedNet, multiBalancedRoi,
+                    multiAggressiveStake, multiAggressiveGross, multiAggressiveNet, multiAggressiveRoi
+                );
+            }
+            
+            function calculateAndDisplayResults(
+                combinedOdds, 
+                budget, 
+                conservativeStakeEl, conservativeGrossEl, conservativeNetEl, conservativeRoiEl,
+                balancedStakeEl, balancedGrossEl, balancedNetEl, balancedRoiEl,
+                aggressiveStakeEl, aggressiveGrossEl, aggressiveNetEl, aggressiveRoiEl
+            ) {
+                // Conservativo
+                const conservativeStake = budget * strategies.conservative;
+                const conservativeGross = conservativeStake * combinedOdds;
+                const conservativeNet = conservativeGross - conservativeStake;
+                const conservativeRoi = (conservativeNet / conservativeStake) * 100;
+                
+                conservativeStakeEl.textContent = `€${conservativeStake.toFixed(2)}`;
+                conservativeGrossEl.textContent = `€${conservativeGross.toFixed(2)}`;
+                conservativeNetEl.textContent = `€${conservativeNet.toFixed(2)}`;
+                conservativeRoiEl.textContent = `${conservativeRoi.toFixed(2)}%`;
+                
+                // Bilanciato
+                const balancedStake = budget * strategies.balanced;
+                const balancedGross = balancedStake * combinedOdds;
+                const balancedNet = balancedGross - balancedStake;
+                const balancedRoi = (balancedNet / balancedStake) * 100;
+                
+                balancedStakeEl.textContent = `€${balancedStake.toFixed(2)}`;
+                balancedGrossEl.textContent = `€${balancedGross.toFixed(2)}`;
+                balancedNetEl.textContent = `€${balancedNet.toFixed(2)}`;
+                balancedRoiEl.textContent = `${balancedRoi.toFixed(2)}%`;
+                
+                // Aggressivo
+                const aggressiveStake = budget * strategies.aggressive;
+                const aggressiveGross = aggressiveStake * combinedOdds;
+                const aggressiveNet = aggressiveGross - aggressiveStake;
+                const aggressiveRoi = (aggressiveNet / aggressiveStake) * 100;
+                
+                aggressiveStakeEl.textContent = `€${aggressiveStake.toFixed(2)}`;
+                aggressiveGrossEl.textContent = `€${aggressiveGross.toFixed(2)}`;
+                aggressiveNetEl.textContent = `€${aggressiveNet.toFixed(2)}`;
+                aggressiveRoiEl.textContent = `${aggressiveRoi.toFixed(2)}%`;
+            }
+        });
+    </script>
+</body>
+</html>
